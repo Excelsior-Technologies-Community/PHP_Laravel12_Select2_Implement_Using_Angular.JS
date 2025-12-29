@@ -1,0 +1,80 @@
+<!-- Color Controller Wrapper -->
+<div ng-controller="ColorController">
+
+<!-- Page Header -->
+<div class="row">
+    <div class="col-lg-12 margin-tb">
+        <div class="pull-left">
+            <!-- Page Title -->
+            <h1>Color Management</h1>
+        </div>
+
+        <div class="pull-right" style="padding-top:30px">
+            <!-- Open Create Color Modal -->
+            <button class="btn btn-success"
+                    data-toggle="modal"
+                    data-target="#create-color">
+                Create New
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Color Table -->
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>Color Name</th>
+            <th width="180px">Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <!-- Loop through colors -->
+        <tr ng-repeat="c in data">
+            <td>{{$index + 1}}</td>
+            <td>{{c.name}}</td>
+            <td>
+                <button class="btn btn-danger"
+                        ng-click="remove(c,$index)">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+<!-- ================= CREATE COLOR MODAL ================= -->
+
+<div class="modal fade" id="create-color">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form ng-submit="saveAdd()">
+                <div class="modal-header">
+                    <h4>Create Color</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Color Name</label>
+                        <input type="text"
+                               class="form-control"
+                               ng-model="form.name"
+                               required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" type="submit">Save</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+</div>

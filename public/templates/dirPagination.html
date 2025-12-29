@@ -1,0 +1,13 @@
+<ul class="pagination pull-right" ng-if="pagination.collectionLength > pagination.itemsPerPage">
+    <li ng-class="{disabled: pagination.currentPage == 1}">
+        <a href="" ng-click="pagination.currentPage = pagination.currentPage - 1">‹</a>
+    </li>
+
+    <li class="active">
+        <a href="">{{pagination.currentPage}}</a>
+    </li>
+
+    <li ng-class="{disabled: pagination.currentPage * pagination.itemsPerPage >= pagination.collectionLength}">
+        <a href="" ng-click="pagination.currentPage = pagination.currentPage + 1">›</a>
+    </li>
+</ul>

@@ -1,0 +1,175 @@
+<!-- Product Controller Wrapper -->
+<div ng-controller="ProductController">
+
+<!-- Page Header -->
+<div class="row">
+    <div class="col-lg-12 margin-tb">
+        <div class="pull-left">
+            <!-- Page Title -->
+            <h1>Product Management</h1>
+        </div>
+
+        <div class="pull-right" style="padding-top:30px">
+            <!-- Open Create Product Modal -->
+            <button class="btn btn-success"
+                    data-toggle="modal"
+                    data-target="#create-product">
+                Create New
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Product Table -->
+<table class="table table-bordered pagin-table">
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>Product Title</th>
+            <th>Price</th>
+            <th>Colors</th>
+            <th width="220px">Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <!-- Loop through products -->
+        <tr ng-repeat="value in data">
+            <td>{{$index + 1}}</td>
+            <td>{{value.title}}</td>
+            <td>{{value.price}}</td>
+
+            <!-- Product Colors -->
+            <td>
+                <span class="label label-info"
+                      ng-repeat="c in value.colors"
+                      style="margin-right:5px">
+                    {{c.name}}
+                </span>
+            </td>
+
+            <!-- Action Buttons -->
+            <td>
+                <button class="btn btn-primary"
+                        ng-click="edit(value.id)">
+                    Edit
+                </button>
+
+                <button class="btn btn-danger"
+                        ng-click="remove(value,$index)">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Pagination Controls -->
+<dir-pagination-controls
+    class="pull-right"
+    on-page-change="pageChanged(newPageNumber)"
+    template-url="templates/dirPagination.html">
+</dir-pagination-controls>
+
+
+<!-- ================= CREATE PRODUCT MODAL ================= -->
+
+<div class="modal fade" id="create-product">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form ng-submit="saveAdd()">
+                <div class="modal-header">
+                    <h4>Create Product</h4>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="form-group">
+                        <label>Product Title</label>
+                        <input type="text"
+                               class="form-control"
+                               ng-model="form.title"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Price</label>
+                        <input type="number"
+                               class="form-control"
+                               ng-model="form.price"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Colors</label>
+                        <select id="colorSelectCreate"
+                                class="form-control"
+                                multiple>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" type="submit">Save</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- ================= EDIT PRODUCT MODAL ================= -->
+
+<div class="modal fade" id="edit-product">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form ng-submit="saveEdit()">
+                <input type="hidden" ng-model="form.id">
+
+                <div class="modal-header">
+                    <h4>Edit Product</h4>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="form-group">
+                        <label>Product Title</label>
+                        <input type="text"
+                               class="form-control"
+                               ng-model="form.title"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Price</label>
+                        <input type="number"
+                               class="form-control"
+                               ng-model="form.price"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Colors</label>
+                        <select id="colorSelectEdit"
+                                class="form-control"
+                                multiple>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" type="submit">Update</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+</div>
