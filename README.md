@@ -1,6 +1,15 @@
 # PHP_Laravel12_Select2_Implement_Using_Angular.JS
 
 ---
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white">
+  <img src="https://img.shields.io/badge/PHP-8%2B-777BB4?style=for-the-badge&logo=php&logoColor=white">
+  <img src="https://img.shields.io/badge/AngularJS-1.8-DD0031?style=for-the-badge&logo=angularjs&logoColor=white">
+  <img src="https://img.shields.io/badge/Select2-Multiple%20Dropdown-2E7D32?style=for-the-badge">
+  <img src="https://img.shields.io/badge/MySQL-Database-4479A1?style=for-the-badge&logo=mysql&logoColor=white">
+  <img src="https://img.shields.io/badge/Bootstrap-3.x-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white">
+</p>
+
 
 ##  Overview
 
