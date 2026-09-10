@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\View;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ColorController;
 
@@ -10,4 +9,15 @@ Route::get('/', function () {
 });
 
 Route::resource('products', ProductController::class);
+
 Route::resource('colors', ColorController::class);
+
+/*
+|--------------------------------------------------------------------------
+| Product Analytics
+|--------------------------------------------------------------------------
+*/
+Route::get(
+    '/products-analytics',
+    [ProductController::class, 'analytics']
+);
