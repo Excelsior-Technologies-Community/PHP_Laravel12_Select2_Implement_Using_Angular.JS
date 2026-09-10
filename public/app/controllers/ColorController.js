@@ -1,37 +1,91 @@
-// Color Controller
-app.controller('ColorController', function($scope,$http){
+app.controller('ColorController', function ($scope, $http) {
 
-    // Color list
     $scope.data = [];
 
-    // Form object
     $scope.form = {};
 
-    // Load colors
-    function load(){
-        $http.get('/colors').then(res=>{
-            $scope.data = res.data;
-        });
+    /*
+    |--------------------------------------------------------------------------
+    | Load colors
+    |--------------------------------------------------------------------------
+    */
+
+    function load() {
+
+        $http.get('/colors')
+            .then(function (res) {
+
+                $scope.data = res.data;
+
+            });
     }
 
-    // Initial load
     load();
 
-    // Save new color
-    $scope.saveAdd = function(){
-        $http.post('/colors',$scope.form).then(res=>{
-            $scope.data.push(res.data);
+    /*
+    |--------------------------------------------------------------------------
+    | Add Color
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.saveAdd = function () {
+
+        $http.post(
+            '/colors',
+            $scope.form
+        ).then(function (res) {
+
+            $scope.data.push(res.data.color);
+
             $('#create-color').modal('hide');
+
             $scope.form = {};
+
+            alert(
+                'Color created successfully.'
+            );
+
+        }, function (error) {
+
+            if (
+                error.data &&
+                error.data.errors &&
+                error.data.errors.name
+            ) {
+                alert(
+                    error.data.errors.name[0]
+                );
+            } else {
+                alert(
+                    'Unable to create color.'
+                );
+            }
+
         });
     };
 
-    // Delete color
-    $scope.remove = function(c,index){
-        if(confirm('Delete?')){
-            $http.delete('/colors/'+c.id).then(()=>{
-                $scope.data.splice(index,1);
-            });
+    /*
+    |--------------------------------------------------------------------------
+    | Delete Color
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.remove = function (c, index) {
+
+        if (!confirm(
+            'Delete this color? All product relationships will also be removed.'
+        )) {
+            return;
         }
+
+        $http.delete(
+            '/colors/' + c.id
+        ).then(function () {
+
+            $scope.data.splice(index, 1);
+
+        });
+
     };
+
 });

@@ -6,7 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    protected $fillable = ['title','price'];
+    protected $fillable = [
+        'title',
+        'price',
+    ];
+
+    protected $casts = [
+        'price' => 'integer',
+    ];
 
     public function colors()
     {

@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('color_product', function (Blueprint $table) {
@@ -26,15 +23,13 @@ return new class extends Migration
                 ->references('id')
                 ->on('colors')
                 ->onDelete('cascade');
-        });
 
+            $table->unique(['product_id', 'color_id']);
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('product_color');
+        Schema::dropIfExists('color_product');
     }
 };
