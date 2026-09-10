@@ -7,22 +7,69 @@ use App\Models\Color;
 
 class ColorController extends Controller
 {
-    // Get all colors
-    public function index()
+    /**
+     * Get all colors
+     */
+    public function index(Request $request)
     {
-        return Color::all();
+        $query = Color::withCount('products');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Color search
+        |--------------------------------------------------------------------------
+        */
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(
+                'name',
+                'like',
+                '%' . $search . '%'
+            );
+        }
+
+        return response()->json(
+            $query
+                ->orderBy('name')
+                ->get()
+        );
     }
 
-    // Store new color
+    /**
+     * Store color
+     */
     public function store(Request $request)
     {
-        return Color::create($request->only('name'));
+        $validated = $request->validate([
+            'name' => 'required|string|max:100|unique:colors,name',
+        ]);
+
+        $color = Color::create([
+            'name' => $validated['name'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Color created successfully.',
+            'color' => $color,
+        ], 201);
     }
 
-    // Delete color
+    /**
+     * Delete color
+     */
     public function destroy($id)
     {
-        Color::find($id)->delete();
-        return response()->json(true);
+        $color = Color::findOrFail($id);
+
+        $color->products()->detach();
+
+        $color->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Color deleted successfully.'
+        ]);
     }
 }
