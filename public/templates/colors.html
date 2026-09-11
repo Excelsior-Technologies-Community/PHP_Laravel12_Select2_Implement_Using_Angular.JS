@@ -1,80 +1,191 @@
-<!-- Color Controller Wrapper -->
-<div ng-controller="ColorController">
+<div class="panel panel-default">
 
-<!-- Page Header -->
-<div class="row">
-    <div class="col-lg-12 margin-tb">
-        <div class="pull-left">
-            <!-- Page Title -->
-            <h1>Color Management</h1>
-        </div>
+    <div class="panel-heading">
 
-        <div class="pull-right" style="padding-top:30px">
-            <!-- Open Create Color Modal -->
-            <button class="btn btn-success"
-                    data-toggle="modal"
-                    data-target="#create-color">
-                Create New
-            </button>
-        </div>
+        <h3 class="panel-title">
+            <strong>Color Management</strong>
+        </h3>
+
     </div>
-</div>
 
-<!-- Color Table -->
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>No</th>
-            <th>Color Name</th>
-            <th width="180px">Action</th>
-        </tr>
-    </thead>
 
-    <tbody>
-        <!-- Loop through colors -->
-        <tr ng-repeat="c in data">
-            <td>{{$index + 1}}</td>
-            <td>{{c.name}}</td>
-            <td>
-                <button class="btn btn-danger"
-                        ng-click="remove(c,$index)">
-                    Delete
+    <div class="panel-body">
+
+
+        <!-- ====================================================== -->
+        <!-- ADD COLOR -->
+        <!-- ====================================================== -->
+
+        <div class="well">
+
+            <h4>
+                Add New Color
+            </h4>
+
+            <form
+                class="form-inline"
+                ng-submit="addColor()">
+
+                <div class="form-group">
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        ng-model="form.name"
+                        placeholder="Color name">
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-success">
+
+                    ➕ Add Color
+
                 </button>
-            </td>
-        </tr>
-    </tbody>
-</table>
 
-
-<!-- ================= CREATE COLOR MODAL ================= -->
-
-<div class="modal fade" id="create-color">
-    <div class="modal-dialog">
-        <div class="modal-content">
-
-            <form ng-submit="saveAdd()">
-                <div class="modal-header">
-                    <h4>Create Color</h4>
-                </div>
-
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Color Name</label>
-                        <input type="text"
-                               class="form-control"
-                               ng-model="form.name"
-                               required>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button class="btn btn-primary" type="submit">Save</button>
-                </div>
             </form>
 
         </div>
+
+
+        <!-- ====================================================== -->
+        <!-- SEARCH -->
+        <!-- ====================================================== -->
+
+        <div class="row">
+
+            <div class="col-md-6">
+
+                <label>
+                    🔎 Search Colors
+                </label>
+
+                <input
+                    type="text"
+                    class="form-control"
+                    ng-model="search"
+                    ng-keyup="$event.keyCode == 13 && searchColors()"
+                    placeholder="Search color...">
+
+            </div>
+
+
+            <div class="col-md-2">
+
+                <label>
+                    &nbsp;
+                </label>
+
+                <button
+                    class="btn btn-primary form-control"
+                    ng-click="searchColors()">
+
+                    Search
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <br>
+
+
+        <!-- ====================================================== -->
+        <!-- COLORS TABLE -->
+        <!-- ====================================================== -->
+
+        <div class="table-responsive">
+
+            <table
+                class="table table-bordered table-striped">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            ID
+                        </th>
+
+                        <th>
+                            Color
+                        </th>
+
+                        <th>
+                            Products
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    <tr
+                        ng-repeat="color in colors">
+
+                        <td>
+                            {{ color.id }}
+                        </td>
+
+                        <td>
+
+                            <span class="label label-primary">
+
+                                {{ color.name }}
+
+                            </span>
+
+                        </td>
+
+                        <td>
+
+                            {{ color.products_count }}
+
+                        </td>
+
+                        <td>
+
+                            <button
+                                class="btn btn-danger btn-xs"
+                                ng-click="deleteColor(color.id)">
+
+                                🗑 Delete
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+
+                    <tr
+                        ng-if="colors.length === 0">
+
+                        <td
+                            colspan="4"
+                            class="text-center">
+
+                            No colors found.
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
     </div>
-</div>
 
 </div>

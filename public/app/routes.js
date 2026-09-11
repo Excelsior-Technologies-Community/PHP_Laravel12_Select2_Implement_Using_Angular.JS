@@ -1,27 +1,92 @@
-var app = angular.module('mainApp', [
-    'ngRoute',
-    'angularUtils.directives.dirPagination'
+var mainApp = angular.module(
+    'mainApp',
+    ['ngRoute']
+);
+
+
+mainApp.config([
+    '$routeProvider',
+    '$httpProvider',
+
+    function ($routeProvider, $httpProvider) {
+
+
+        // =====================================================
+        // CSRF TOKEN
+        // =====================================================
+
+        var csrfElement = document.querySelector(
+            'meta[name="csrf-token"]'
+        );
+
+
+        if (csrfElement) {
+
+            var csrfToken =
+                csrfElement.getAttribute('content');
+
+
+            $httpProvider.defaults.headers.common[
+                'X-CSRF-TOKEN'
+            ] = csrfToken;
+
+        }
+
+
+        // =====================================================
+        // ANGULAR ROUTES
+        // =====================================================
+
+        $routeProvider
+
+
+            // -------------------------------------------------
+            // HOME
+            // -------------------------------------------------
+
+            .when('/', {
+
+                templateUrl: '/templates/home.html'
+
+            })
+
+
+            // -------------------------------------------------
+            // PRODUCTS
+            // -------------------------------------------------
+
+            .when('/products', {
+
+                templateUrl: '/templates/products.html',
+
+                controller: 'ProductController'
+
+            })
+
+
+            // -------------------------------------------------
+            // COLORS
+            // -------------------------------------------------
+
+            .when('/colors', {
+
+                templateUrl: '/templates/colors.html',
+
+                controller: 'ColorController'
+
+            })
+
+
+            // -------------------------------------------------
+            // UNKNOWN URL
+            // -------------------------------------------------
+
+            .otherwise({
+
+                redirectTo: '/'
+
+            });
+
+    }
+
 ]);
-
-app.config(function ($routeProvider, $locationProvider) {
-
-    $locationProvider.hashPrefix('');
-
-    $routeProvider
-
-        .when('/', {
-            templateUrl: 'templates/home.html'
-        })
-
-        .when('/products', {
-            templateUrl: 'templates/products.html'
-        })
-
-        .when('/colors', {
-            templateUrl: 'templates/colors.html'
-        })
-
-        .otherwise({
-            redirectTo: '/'
-        });
-});

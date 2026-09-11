@@ -1,26 +1,51 @@
-app.controller('ColorController', function ($scope, $http) {
+mainApp.controller('ColorController', function ($scope, $http) {
 
-    $scope.data = [];
+    $scope.colors = [];
 
-    $scope.form = {};
+    $scope.search = '';
+
+    $scope.form = {
+        name: ''
+    };
 
     /*
     |--------------------------------------------------------------------------
-    | Load colors
+    | Load Colors
     |--------------------------------------------------------------------------
     */
 
-    function load() {
+    $scope.loadColors = function () {
 
-        $http.get('/colors')
-            .then(function (res) {
+        $http.get('/colors', {
+            params: {
+                search: $scope.search
+            }
+        })
+        .then(function (response) {
 
-                $scope.data = res.data;
+            $scope.colors = response.data;
 
-            });
-    }
+        })
+        .catch(function (error) {
 
-    load();
+            console.error(
+                'Unable to load colors',
+                error
+            );
+
+        });
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Search Colors
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.searchColors = function () {
+
+        $scope.loadColors();
+    };
 
     /*
     |--------------------------------------------------------------------------
@@ -28,34 +53,45 @@ app.controller('ColorController', function ($scope, $http) {
     |--------------------------------------------------------------------------
     */
 
-    $scope.saveAdd = function () {
+    $scope.addColor = function () {
+
+        if (!$scope.form.name) {
+
+            alert('Color name is required.');
+
+            return;
+        }
 
         $http.post(
             '/colors',
             $scope.form
-        ).then(function (res) {
-
-            $scope.data.push(res.data.color);
-
-            $('#create-color').modal('hide');
-
-            $scope.form = {};
+        )
+        .then(function (response) {
 
             alert(
-                'Color created successfully.'
+                response.data.message
             );
 
-        }, function (error) {
+            $scope.form.name = '';
+
+            $scope.loadColors();
+
+        })
+        .catch(function (error) {
+
+            console.error(error);
 
             if (
                 error.data &&
-                error.data.errors &&
-                error.data.errors.name
+                error.data.errors
             ) {
+
                 alert(
-                    error.data.errors.name[0]
+                    'Color already exists or is invalid.'
                 );
+
             } else {
+
                 alert(
                     'Unable to create color.'
                 );
@@ -70,22 +106,36 @@ app.controller('ColorController', function ($scope, $http) {
     |--------------------------------------------------------------------------
     */
 
-    $scope.remove = function (c, index) {
+    $scope.deleteColor = function (id) {
 
         if (!confirm(
-            'Delete this color? All product relationships will also be removed.'
+            'Are you sure you want to delete this color?'
         )) {
             return;
         }
 
         $http.delete(
-            '/colors/' + c.id
-        ).then(function () {
+            '/colors/' + id
+        )
+        .then(function (response) {
 
-            $scope.data.splice(index, 1);
+            alert(
+                response.data.message
+            );
+
+            $scope.loadColors();
+
+        })
+        .catch(function (error) {
+
+            console.error(error);
+
+            alert(
+                'Unable to delete color.'
+            );
 
         });
-
     };
 
+    $scope.loadColors();
 });

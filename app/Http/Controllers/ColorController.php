@@ -9,18 +9,18 @@ class ColorController extends Controller
 {
     /**
      * Get all colors
+     *
+     * Supports:
+     * - Search
+     * - Product count
      */
     public function index(Request $request)
     {
         $query = Color::withCount('products');
 
-        /*
-        |--------------------------------------------------------------------------
-        | Color search
-        |--------------------------------------------------------------------------
-        */
         if ($request->filled('search')) {
-            $search = $request->search;
+
+            $search = trim($request->search);
 
             $query->where(
                 'name',
@@ -37,12 +37,17 @@ class ColorController extends Controller
     }
 
     /**
-     * Store color
+     * Store Color
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100|unique:colors,name',
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                'unique:colors,name',
+            ],
         ]);
 
         $color = Color::create([
@@ -57,7 +62,7 @@ class ColorController extends Controller
     }
 
     /**
-     * Delete color
+     * Delete Color
      */
     public function destroy($id)
     {
@@ -69,7 +74,7 @@ class ColorController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Color deleted successfully.'
+            'message' => 'Color deleted successfully.',
         ]);
     }
 }

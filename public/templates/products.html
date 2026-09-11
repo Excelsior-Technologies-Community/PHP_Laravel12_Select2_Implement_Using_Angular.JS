@@ -1,123 +1,31 @@
-<div ng-controller="ProductController">
+<div class="panel panel-default">
 
-    <!-- ========================================================= -->
-    <!-- HEADER -->
-    <!-- ========================================================= -->
+    <div class="panel-heading">
 
-    <div class="row">
+        <div class="row">
 
-        <div class="col-md-8">
+            <div class="col-md-8">
 
-            <h1>
-                Product Management
-            </h1>
+                <h3 class="panel-title">
+                    <strong>Product Management</strong>
+                </h3>
 
-        </div>
-
-        <div class="col-md-4 text-right"
-             style="padding-top:30px">
-
-            <button
-                class="btn btn-success"
-                data-toggle="modal"
-                data-target="#create-product"
-                ng-click="form = {}">
-
-                <span class="glyphicon glyphicon-plus"></span>
-
-                Create Product
-
-            </button>
-
-        </div>
-
-    </div>
-
-
-    <!-- ========================================================= -->
-    <!-- ANALYTICS -->
-    <!-- ========================================================= -->
-
-    <div class="row">
-
-        <div class="col-md-3">
-
-            <div class="panel panel-primary">
-
-                <div class="panel-heading">
-                    Total Products
-                </div>
-
-                <div class="panel-body text-center">
-
-                    <h2>
-                        {{analytics.total_products}}
-                    </h2>
-
-                </div>
+                <small>
+                    Laravel + AngularJS + Select2
+                </small>
 
             </div>
 
-        </div>
+            <div class="col-md-4 text-right">
 
+                <button
+                    class="btn btn-success"
+                    ng-click="openAddModal()">
 
-        <div class="col-md-3">
+                    <span class="glyphicon glyphicon-plus"></span>
+                    Add Product
 
-            <div class="panel panel-success">
-
-                <div class="panel-heading">
-                    Total Colors
-                </div>
-
-                <div class="panel-body text-center">
-
-                    <h2>
-                        {{analytics.total_colors}}
-                    </h2>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-md-3">
-
-            <div class="panel panel-warning">
-
-                <div class="panel-heading">
-                    Products Without Colors
-                </div>
-
-                <div class="panel-body text-center">
-
-                    <h2>
-                        {{analytics.products_without_colors}}
-                    </h2>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-md-3">
-
-            <div class="panel panel-info">
-
-                <div class="panel-heading">
-                    Average Price
-                </div>
-
-                <div class="panel-body text-center">
-
-                    <h2>
-                        ₹{{analytics.average_price}}
-                    </h2>
-
-                </div>
+                </button>
 
             </div>
 
@@ -126,119 +34,461 @@
     </div>
 
 
-    <!-- ========================================================= -->
-    <!-- COLOR ANALYTICS -->
-    <!-- ========================================================= -->
+    <div class="panel-body">
 
-    <div class="panel panel-default">
 
-        <div class="panel-heading">
+        <!-- ====================================================== -->
+        <!-- FILTERS -->
+        <!-- ====================================================== -->
 
-            <strong>
-                Color Usage Analytics
-            </strong>
+        <div class="filter-box">
 
-            <button
-                class="btn btn-xs btn-primary pull-right"
-                ng-click="loadAnalytics()">
-
-                Refresh Analytics
-
-            </button>
-
-        </div>
-
-        <div class="panel-body">
+            <h4>
+                <strong>Product Filters</strong>
+            </h4>
 
             <div class="row">
 
-                <div class="col-md-6">
+                <!-- Search -->
 
-                    <p>
+                <div class="col-md-4">
 
-                        <strong>
-                            Most Used Color:
-                        </strong>
+                    <label>
+                        🔎 Search
+                    </label>
 
-                        <span
-                            ng-if="analytics.most_used_color">
-
-                            {{analytics.most_used_color.name}}
-
-                            ({{analytics.most_used_color.products_count}}
-                            products)
-
-                        </span>
-
-                        <span
-                            ng-if="!analytics.most_used_color">
-
-                            No colors available
-
-                        </span>
-
-                    </p>
+                    <input
+                        type="text"
+                        class="form-control"
+                        ng-model="filters.search"
+                        placeholder="Search product title..."
+                        ng-keyup="$event.keyCode == 13 && searchProducts()">
 
                 </div>
 
 
-                <div class="col-md-6">
+                <!-- Min Price -->
 
-                    <p>
+                <div class="col-md-2">
 
-                        <strong>
-                            Price Range:
-                        </strong>
+                    <label>
+                        Min Price
+                    </label>
 
-                        ₹{{analytics.lowest_price}}
+                    <input
+                        type="number"
+                        min="0"
+                        class="form-control"
+                        ng-model="filters.min_price"
+                        placeholder="Min">
 
-                        -
+                </div>
 
-                        ₹{{analytics.highest_price}}
 
-                    </p>
+                <!-- Max Price -->
+
+                <div class="col-md-2">
+
+                    <label>
+                        Max Price
+                    </label>
+
+                    <input
+                        type="number"
+                        min="0"
+                        class="form-control"
+                        ng-model="filters.max_price"
+                        placeholder="Max">
+
+                </div>
+
+
+                <!-- Color -->
+
+                <div class="col-md-4">
+
+                    <label>
+                        🎨 Colors
+                    </label>
+
+                    <select
+                        id="filterColors"
+                        class="form-control select2"
+                        multiple
+                        ng-model="filters.color_ids">
+
+                        <option
+                            ng-repeat="color in colors"
+                            value="{{ color.id }}">
+
+                            {{ color.name }}
+
+                        </option>
+
+                    </select>
 
                 </div>
 
             </div>
 
 
+            <br>
+
+
+            <div class="row">
+
+                <!-- Sort -->
+
+                <div class="col-md-4">
+
+                    <label>
+                        ↕️ Sort By
+                    </label>
+
+                    <select
+                        class="form-control"
+                        ng-model="filters.sort"
+                        ng-change="changeSorting()">
+
+                        <option value="id">
+                            ID
+                        </option>
+
+                        <option value="title">
+                            Product Title
+                        </option>
+
+                        <option value="price">
+                            Price
+                        </option>
+
+                        <option value="created_at">
+                            Created Date
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Direction -->
+
+                <div class="col-md-3">
+
+                    <label>
+                        Direction
+                    </label>
+
+                    <select
+                        class="form-control"
+                        ng-model="filters.direction"
+                        ng-change="changeSorting()">
+
+                        <option value="asc">
+                            Ascending
+                        </option>
+
+                        <option value="desc">
+                            Descending
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Buttons -->
+
+                <div class="col-md-5 filter-buttons">
+
+                    <label>
+                        &nbsp;
+                    </label>
+
+                    <div>
+
+                        <button
+                            class="btn btn-primary"
+                            ng-click="applyFilters()">
+
+                            🔎 Apply Filters
+
+                        </button>
+
+                        <button
+                            class="btn btn-default"
+                            ng-click="clearFilters()">
+
+                            ✕ Clear
+
+                        </button>
+
+                        <button
+                            class="btn btn-info"
+                            ng-click="exportProducts()">
+
+                            📥 CSV Export
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <br>
+
+
+        <!-- ====================================================== -->
+        <!-- BULK ACTIONS -->
+        <!-- ====================================================== -->
+
+        <div
+            class="bulk-box"
+            ng-if="selectedProductIds.length > 0">
+
+            <strong>
+                {{ selectedProductIds.length }}
+                product(s) selected
+            </strong>
+
+            <button
+                class="btn btn-danger btn-sm pull-right"
+                ng-click="bulkDelete()">
+
+                🗑 Delete Selected
+
+            </button>
+
+        </div>
+
+
+        <!-- ====================================================== -->
+        <!-- TOTAL -->
+        <!-- ====================================================== -->
+
+        <div class="row">
+
+            <div class="col-md-12">
+
+                <div class="alert alert-info">
+
+                    <strong>
+                        Total Products:
+                    </strong>
+
+                    {{ totalProducts }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ====================================================== -->
+        <!-- LOADING -->
+        <!-- ====================================================== -->
+
+        <div
+            class="text-center"
+            ng-if="loading">
+
+            <h4>
+                Loading products...
+            </h4>
+
+        </div>
+
+
+        <!-- ====================================================== -->
+        <!-- PRODUCT TABLE -->
+        <!-- ====================================================== -->
+
+        <div
+            class="table-responsive"
+            ng-if="!loading">
+
             <table
-                class="table table-bordered table-condensed"
-                ng-if="analytics.color_statistics.length">
+                class="table table-bordered table-striped table-hover">
 
                 <thead>
 
                     <tr>
 
-                        <th>
-                            Color
+                        <th width="45">
+
+                            <input
+                                type="checkbox"
+                                ng-model="selectAll"
+                                ng-change="toggleSelectAll()">
+
                         </th>
 
                         <th>
-                            Products
+                            ID
+                        </th>
+
+                        <th>
+                            Product
+                        </th>
+
+                        <th>
+                            Price
+                        </th>
+
+                        <th>
+                            Colors
+                        </th>
+
+                        <th>
+                            Created
+                        </th>
+
+                        <th width="250">
+                            Actions
                         </th>
 
                     </tr>
 
                 </thead>
 
+
                 <tbody>
 
                     <tr
-                        ng-repeat="color in analytics.color_statistics">
+                        ng-repeat="product in products">
+
+                        <!-- Checkbox -->
 
                         <td>
-                            {{color.name}}
+
+                            <input
+                                type="checkbox"
+                                ng-checked="selectedProductIds.indexOf(product.id) !== -1"
+                                ng-click="toggleProductSelection(product.id)">
+
                         </td>
 
+
+                        <!-- ID -->
+
                         <td>
 
-                            <span class="label label-info">
+                            <strong>
+                                {{ product.id }}
+                            </strong>
 
-                                {{color.products_count}}
+                        </td>
+
+
+                        <!-- Title -->
+
+                        <td>
+
+                            {{ product.title }}
+
+                        </td>
+
+
+                        <!-- Price -->
+
+                        <td>
+
+                            <span class="label label-success">
+
+                                ₹{{ product.price | number }}
 
                             </span>
+
+                        </td>
+
+
+                        <!-- Colors -->
+
+                        <td>
+
+                            <span
+                                class="label label-primary color-label"
+                                ng-repeat="color in product.colors">
+
+                                {{ color.name }}
+
+                            </span>
+
+                            <span
+                                ng-if="product.colors.length === 0"
+                                class="text-muted">
+
+                                No colors
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- Created -->
+
+                        <td>
+
+                            {{ product.created_at | date:'dd-MM-yyyy' }}
+
+                        </td>
+
+
+                        <!-- Actions -->
+
+                        <td>
+
+                            <button
+                                class="btn btn-warning btn-xs"
+                                ng-click="editProduct(product.id)">
+
+                                ✏ Edit
+
+                            </button>
+
+
+                            <button
+                                class="btn btn-info btn-xs"
+                                ng-click="duplicateProduct(product.id)">
+
+                                📋 Duplicate
+
+                            </button>
+
+
+                            <button
+                                class="btn btn-danger btn-xs"
+                                ng-click="deleteProduct(product.id)">
+
+                                🗑 Delete
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+
+                    <tr
+                        ng-if="products.length === 0">
+
+                        <td
+                            colspan="7"
+                            class="text-center">
+
+                            <h4>
+                                No products found.
+                            </h4>
+
+                            <p>
+                                Try changing your filters.
+                            </p>
 
                         </td>
 
@@ -250,604 +500,179 @@
 
         </div>
 
-    </div>
 
+        <!-- ====================================================== -->
+        <!-- PAGINATION -->
+        <!-- ====================================================== -->
 
-    <!-- ========================================================= -->
-    <!-- ADVANCED SEARCH -->
-    <!-- ========================================================= -->
+        <div
+            class="text-center"
+            ng-if="totalPages > 1">
 
-    <div class="panel panel-primary">
+            <ul class="pagination">
 
-        <div class="panel-heading">
+                <li
+                    ng-repeat="page in pageNumbers()"
+                    ng-class="{active: page == currentPage}">
 
-            <strong>
-                Advanced Product Search & Filtering
-            </strong>
+                    <a
+                        href=""
+                        ng-click="goToPage(page)">
 
-        </div>
+                        {{ page }}
 
-        <div class="panel-body">
+                    </a>
 
-            <form ng-submit="searchProducts()">
+                </li>
 
-                <div class="row">
-
-                    <!-- Product Search -->
-
-                    <div class="col-md-3">
-
-                        <label>
-                            Product Title
-                        </label>
-
-                        <input
-                            type="text"
-                            class="form-control"
-                            placeholder="Search product..."
-                            ng-model="filters.search">
-
-                    </div>
-
-
-                    <!-- Minimum Price -->
-
-                    <div class="col-md-2">
-
-                        <label>
-                            Minimum Price
-                        </label>
-
-                        <input
-                            type="number"
-                            class="form-control"
-                            placeholder="Min"
-                            ng-model="filters.min_price">
-
-                    </div>
-
-
-                    <!-- Maximum Price -->
-
-                    <div class="col-md-2">
-
-                        <label>
-                            Maximum Price
-                        </label>
-
-                        <input
-                            type="number"
-                            class="form-control"
-                            placeholder="Max"
-                            ng-model="filters.max_price">
-
-                    </div>
-
-
-                    <!-- Multiple Color Select2 -->
-
-                    <div class="col-md-3">
-
-                        <label>
-                            Filter by Colors
-                        </label>
-
-                        <select
-                            id="filterColorSelect"
-                            class="form-control"
-                            multiple>
-
-                        </select>
-
-                        <p class="help-block">
-
-                            Select one or more colors.
-
-                        </p>
-
-                    </div>
-
-
-                    <!-- Buttons -->
-
-                    <div
-                        class="col-md-2"
-                        style="padding-top:25px">
-
-                        <button
-                            type="submit"
-                            class="btn btn-primary">
-
-                            <span
-                                class="glyphicon glyphicon-search">
-                            </span>
-
-                            Search
-
-                        </button>
-
-                        <button
-                            type="button"
-                            class="btn btn-default"
-                            ng-click="resetFilters()">
-
-                            Reset
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </form>
+            </ul>
 
         </div>
-
-    </div>
-
-
-    <!-- ========================================================= -->
-    <!-- PRODUCT TABLE -->
-    <!-- ========================================================= -->
-
-    <table
-        class="table table-bordered table-striped">
-
-        <thead>
-
-            <tr>
-
-                <th width="60">
-                    No
-                </th>
-
-                <th>
-                    Product Title
-                </th>
-
-                <th>
-                    Price
-                </th>
-
-                <th>
-                    Selected Colors
-                </th>
-
-                <th width="180">
-                    Action
-                </th>
-
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-            <tr
-                ng-repeat="value in data">
-
-                <td>
-
-                    {{((currentPage - 1) * 3) + $index + 1}}
-
-                </td>
-
-
-                <td>
-
-                    <strong>
-                        {{value.title}}
-                    </strong>
-
-                </td>
-
-
-                <td>
-
-                    ₹{{value.price}}
-
-                </td>
-
-
-                <td>
-
-                    <span
-                        class="label label-info"
-                        ng-repeat="c in value.colors"
-                        style="margin-right:5px">
-
-                        {{c.name}}
-
-                    </span>
-
-
-                    <span
-                        class="text-muted"
-                        ng-if="value.colors.length == 0">
-
-                        No color
-
-                    </span>
-
-                </td>
-
-
-                <td>
-
-                    <button
-                        class="btn btn-primary btn-sm"
-                        ng-click="edit(value.id)">
-
-                        Edit
-
-                    </button>
-
-
-                    <button
-                        class="btn btn-danger btn-sm"
-                        ng-click="remove(value,$index)">
-
-                        Delete
-
-                    </button>
-
-                </td>
-
-            </tr>
-
-
-            <tr
-                ng-if="data.length == 0">
-
-                <td
-                    colspan="5"
-                    class="text-center">
-
-                    No products found.
-
-                </td>
-
-            </tr>
-
-        </tbody>
-
-    </table>
-
-
-<!-- ========================================================= -->
-<!-- SERVER SIDE PAGINATION -->
-<!-- ========================================================= -->
-
-<div
-    class="text-center"
-    ng-if="lastPage > 1"
-    style="margin-top: 20px;"
->
-
-    <ul class="pagination">
-
-        <!-- PREVIOUS -->
-        <li
-            ng-class="{disabled: currentPage == 1}"
-        >
-
-            <a
-                href=""
-                ng-if="currentPage > 1"
-                ng-click="pageChanged(currentPage - 1)"
-            >
-                &laquo; Previous
-            </a>
-
-            <span
-                ng-if="currentPage == 1"
-            >
-                &laquo; Previous
-            </span>
-
-        </li>
-
-
-        <!-- PAGE NUMBERS -->
-        <li
-            ng-repeat="page in getPages()"
-            ng-class="{active: currentPage == page}"
-        >
-
-            <a
-                href=""
-                ng-click="pageChanged(page)"
-            >
-                {{page}}
-            </a>
-
-        </li>
-
-
-        <!-- NEXT -->
-        <li
-            ng-class="{disabled: currentPage == lastPage}"
-        >
-
-            <a
-                href=""
-                ng-if="currentPage < lastPage"
-                ng-click="pageChanged(currentPage + 1)"
-            >
-                Next &raquo;
-            </a>
-
-            <span
-                ng-if="currentPage == lastPage"
-            >
-                Next &raquo;
-            </span>
-
-        </li>
-
-    </ul>
-
-
-    <!-- PAGINATION INFORMATION -->
-
-    <div
-        class="text-muted"
-        style="margin-top: 5px;"
-    >
-
-        Showing
-        <strong>
-            {{((currentPage - 1) * 3) + 1}}
-        </strong>
-
-        -
-
-        <strong>
-            {{
-                currentPage == lastPage
-                    ? totalItems
-                    : currentPage * 3
-            }}
-        </strong>
-
-        of
-
-        <strong>
-            {{totalItems}}
-        </strong>
-
-        products
 
     </div>
 
 </div>
 
-    <!-- ========================================================= -->
-    <!-- CREATE PRODUCT MODAL -->
-    <!-- ========================================================= -->
 
-    <div
-        class="modal fade"
-        id="create-product">
+<!-- ========================================================== -->
+<!-- PRODUCT MODAL -->
+<!-- ========================================================== -->
 
-        <div class="modal-dialog">
+<div
+    class="modal fade"
+    id="productModal"
+    tabindex="-1">
 
-            <div class="modal-content">
+    <div class="modal-dialog">
 
-                <form ng-submit="saveAdd()">
-
-                    <div class="modal-header">
-
-                        <button
-                            type="button"
-                            class="close"
-                            data-dismiss="modal">
-
-                            ×
-
-                        </button>
-
-                        <h4>
-                            Create Product
-                        </h4>
-
-                    </div>
+        <div class="modal-content">
 
 
-                    <div class="modal-body">
+            <div class="modal-header">
 
-                        <div class="form-group">
+                <button
+                    type="button"
+                    class="close"
+                    data-dismiss="modal">
 
-                            <label>
-                                Product Title
-                            </label>
+                    &times;
 
-                            <input
-                                type="text"
-                                class="form-control"
-                                ng-model="form.title"
-                                required>
+                </button>
 
-                        </div>
+                <h4 class="modal-title">
 
+                    <span ng-if="!editing">
+                        Add Product
+                    </span>
 
-                        <div class="form-group">
+                    <span ng-if="editing">
+                        Edit Product
+                    </span>
 
-                            <label>
-                                Price
-                            </label>
-
-                            <input
-                                type="number"
-                                class="form-control"
-                                min="0"
-                                ng-model="form.price"
-                                required>
-
-                        </div>
-
-
-                        <div class="form-group">
-
-                            <label>
-                                Colors
-                            </label>
-
-                            <select
-                                id="colorSelectCreate"
-                                class="form-control"
-                                multiple
-                                required>
-                            </select>
-
-                            <p class="help-block">
-
-                                Search and select multiple colors.
-
-                            </p>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="modal-footer">
-
-                        <button
-                            type="button"
-                            class="btn btn-default"
-                            data-dismiss="modal">
-
-                            Close
-
-                        </button>
-
-
-                        <button
-                            type="submit"
-                            class="btn btn-success">
-
-                            Save Product
-
-                        </button>
-
-                    </div>
-
-                </form>
+                </h4>
 
             </div>
 
-        </div>
 
-    </div>
-
-
-    <!-- ========================================================= -->
-    <!-- EDIT PRODUCT MODAL -->
-    <!-- ========================================================= -->
-
-    <div
-        class="modal fade"
-        id="edit-product">
-
-        <div class="modal-dialog">
-
-            <div class="modal-content">
-
-                <form ng-submit="saveEdit()">
-
-                    <div class="modal-header">
-
-                        <button
-                            type="button"
-                            class="close"
-                            data-dismiss="modal">
-
-                            ×
-
-                        </button>
-
-                        <h4>
-                            Edit Product
-                        </h4>
-
-                    </div>
+            <div class="modal-body">
 
 
-                    <div class="modal-body">
+                <!-- Title -->
 
-                        <div class="form-group">
+                <div class="form-group">
 
-                            <label>
-                                Product Title
-                            </label>
+                    <label>
+                        Product Title
+                    </label>
 
-                            <input
-                                type="text"
-                                class="form-control"
-                                ng-model="form.title"
-                                required>
+                    <input
+                        type="text"
+                        class="form-control"
+                        ng-model="form.title"
+                        placeholder="Enter product title">
 
-                        </div>
-
-
-                        <div class="form-group">
-
-                            <label>
-                                Price
-                            </label>
-
-                            <input
-                                type="number"
-                                class="form-control"
-                                min="0"
-                                ng-model="form.price"
-                                required>
-
-                        </div>
+                </div>
 
 
-                        <div class="form-group">
+                <!-- Price -->
 
-                            <label>
-                                Colors
-                            </label>
+                <div class="form-group">
 
-                            <select
-                                id="colorSelectEdit"
-                                class="form-control"
-                                multiple>
+                    <label>
+                        Price
+                    </label>
 
-                            </select>
+                    <input
+                        type="number"
+                        min="0"
+                        class="form-control"
+                        ng-model="form.price"
+                        placeholder="Enter price">
 
-                        </div>
-
-                    </div>
-
-
-                    <div class="modal-footer">
-
-                        <button
-                            type="button"
-                            class="btn btn-default"
-                            data-dismiss="modal">
-
-                            Close
-
-                        </button>
+                </div>
 
 
-                        <button
-                            type="submit"
-                            class="btn btn-primary">
+                <!-- Colors -->
 
-                            Update Product
+                <div class="form-group">
 
-                        </button>
+                    <label>
+                        Select Colors
+                    </label>
 
-                    </div>
+                    <select
+                        id="productColors"
+                        class="form-control select2"
+                        multiple
+                        ng-model="form.color_ids">
 
-                </form>
+                        <option
+                            ng-repeat="color in colors"
+                            value="{{ color.id }}">
+
+                            {{ color.name }}
+
+                        </option>
+
+                    </select>
+
+                    <p class="help-block">
+
+                        You can select multiple colors.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-default"
+                    data-dismiss="modal">
+
+                    Cancel
+
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    ng-click="saveProduct()"
+                    ng-disabled="saving">
+
+                    <span ng-if="!saving">
+                        Save Product
+                    </span>
+
+                    <span ng-if="saving">
+                        Saving...
+                    </span>
+
+                </button>
 
             </div>
 
