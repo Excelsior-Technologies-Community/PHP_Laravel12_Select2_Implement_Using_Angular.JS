@@ -1,359 +1,58 @@
-app.controller('ProductController', function (
-    $scope,
-    $http,
-    $timeout
-) {
+mainApp.controller('ProductController', function ($scope, $http, $timeout) {
 
     /*
     |--------------------------------------------------------------------------
-    | Main Data
+    | Variables
     |--------------------------------------------------------------------------
     */
 
-    $scope.data = [];
+    $scope.products = [];
 
     $scope.colors = [];
 
-    $scope.form = {};
+    $scope.selectedProductIds = [];
 
-    $scope.totalItems = 0;
+    $scope.selectAll = false;
+
+    $scope.loading = false;
+
+    $scope.saving = false;
+
+    $scope.editing = false;
 
     $scope.currentPage = 1;
 
-    $scope.lastPage = 1;
+    $scope.totalPages = 1;
 
+    $scope.totalProducts = 0;
 
     /*
     |--------------------------------------------------------------------------
-    | Search & Filters
+    | Filters
     |--------------------------------------------------------------------------
     */
 
     $scope.filters = {
-
         search: '',
-
         min_price: '',
-
         max_price: '',
+        color_ids: [],
+        sort: 'id',
+        direction: 'asc'
+    };
 
+    /*
+    |--------------------------------------------------------------------------
+    | Form
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.form = {
+        id: null,
+        title: '',
+        price: '',
         color_ids: []
-
     };
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Analytics
-    |--------------------------------------------------------------------------
-    */
-
-    $scope.analytics = {
-
-        total_products: 0,
-
-        total_colors: 0,
-
-        products_without_colors: 0,
-
-        average_price: 0,
-
-        highest_price: 0,
-
-        lowest_price: 0,
-
-        most_used_color: null,
-
-        color_statistics: []
-
-    };
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Load Products
-    |--------------------------------------------------------------------------
-    */
-
-    function loadProducts(page) {
-
-        page = page || 1;
-
-        var params = {
-
-            page: page
-
-        };
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Product Search
-        |--------------------------------------------------------------------------
-        */
-
-        if ($scope.filters.search) {
-
-            params.search =
-                $scope.filters.search;
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Minimum Price
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $scope.filters.min_price !== ''
-        ) {
-
-            params.min_price =
-                $scope.filters.min_price;
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Maximum Price
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $scope.filters.max_price !== ''
-        ) {
-
-            params.max_price =
-                $scope.filters.max_price;
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Multiple Color IDs
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $scope.filters.color_ids &&
-            $scope.filters.color_ids.length > 0
-        ) {
-
-            params.color_ids =
-                $scope.filters.color_ids.join(',');
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Debug Request Parameters
-        |--------------------------------------------------------------------------
-        */
-
-        console.log(
-            'Product Filter Parameters:',
-            params
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Request Products
-        |--------------------------------------------------------------------------
-        */
-
-        $http.get(
-            '/products',
-            {
-                params: params
-            }
-        ).then(function (res) {
-
-            $scope.data =
-                res.data.data;
-
-            $scope.totalItems =
-                res.data.total;
-
-            $scope.currentPage =
-                res.data.current_page;
-
-            $scope.lastPage =
-                res.data.last_page;
-
-
-        }, function (error) {
-
-            console.error(
-                'Product loading failed:',
-                error
-            );
-
-        });
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Initialize Filter Select2
-    |--------------------------------------------------------------------------
-    */
-
-    function initializeFilterColorSelect() {
-
-        var filterColorSelect =
-            $('#filterColorSelect');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Check Element
-        |--------------------------------------------------------------------------
-        */
-
-        if (!filterColorSelect.length) {
-
-            return;
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Destroy Existing Select2
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            filterColorSelect.hasClass(
-                'select2-hidden-accessible'
-            )
-        ) {
-
-            filterColorSelect.select2(
-                'destroy'
-            );
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Remove Existing Options
-        |--------------------------------------------------------------------------
-        */
-
-        filterColorSelect.empty();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Build Select2 Data
-        |--------------------------------------------------------------------------
-        */
-
-        var colorData =
-            $scope.colors.map(
-                function (color) {
-
-                    return {
-
-                        id: String(color.id),
-
-                        text: color.name
-
-                    };
-
-                }
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Initialize Select2
-        |--------------------------------------------------------------------------
-        */
-
-        filterColorSelect.select2({
-
-            width: '100%',
-
-            placeholder:
-                'Filter by one or more colors',
-
-            allowClear: true,
-
-            closeOnSelect: false,
-
-            data: colorData
-
-        });
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Remove Previous Event
-        |--------------------------------------------------------------------------
-        */
-
-        filterColorSelect.off(
-            'change.productFilter'
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Handle Color Selection
-        |--------------------------------------------------------------------------
-        */
-
-        filterColorSelect.on(
-            'change.productFilter',
-            function () {
-
-                var selectedColors =
-                    filterColorSelect.val() || [];
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Debug Selected Colors
-                |--------------------------------------------------------------------------
-                */
-
-                console.log(
-                    'Selected Color IDs:',
-                    selectedColors
-                );
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | AngularJS Digest
-                |--------------------------------------------------------------------------
-                */
-
-                $scope.$applyAsync(
-                    function () {
-
-                        $scope.filters.color_ids =
-                            selectedColors;
-
-                        loadProducts(1);
-
-                    }
-                );
-
-            }
-        );
-
-    }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -361,67 +60,193 @@ app.controller('ProductController', function (
     |--------------------------------------------------------------------------
     */
 
-    function loadColors(callback) {
+    $scope.loadColors = function () {
 
-        $http.get(
-            '/colors'
-        ).then(function (res) {
+        $http.get('/colors')
+            .then(function (response) {
 
-            $scope.colors =
-                res.data;
+                $scope.colors = response.data;
 
+                $timeout(function () {
+                    $scope.initializeSelect2();
+                }, 100);
 
-            /*
-            |--------------------------------------------------------------------------
-            | Initialize Filter Select2
-            |--------------------------------------------------------------------------
-            */
+            })
+            .catch(function (error) {
 
-            $timeout(
-                function () {
+                console.error(
+                    'Unable to load colors',
+                    error
+                );
 
-                    initializeFilterColorSelect();
-
-                },
-                100
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Callback
-            |--------------------------------------------------------------------------
-            */
-
-            if (callback) {
-
-                callback();
-
-            }
-
-
-        }, function (error) {
-
-            console.error(
-                'Color loading failed:',
-                error
-            );
-
-        });
-
-    }
-
+            });
+    };
 
     /*
     |--------------------------------------------------------------------------
-    | Initial Loading
+    | Select2
     |--------------------------------------------------------------------------
     */
 
-    loadColors();
+    $scope.initializeSelect2 = function () {
 
-    loadProducts(1);
+        $('.select2').each(function () {
 
+            var element = $(this);
+
+            if (element.hasClass('select2-hidden-accessible')) {
+                element.select2('destroy');
+            }
+
+            element.select2({
+                width: '100%',
+                placeholder: 'Select colors',
+                allowClear: true
+            });
+
+            element.off('change.angular');
+
+            element.on(
+                'change.angular',
+                function () {
+
+                    var value = element.val() || [];
+
+                    $scope.$applyAsync(function () {
+
+                        if (element.attr('id') === 'filterColors') {
+
+                            $scope.filters.color_ids = value.map(Number);
+
+                        }
+
+                        if (element.attr('id') === 'productColors') {
+
+                            $scope.form.color_ids = value.map(Number);
+
+                        }
+
+                    });
+
+                }
+            );
+        });
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Load Products
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.loadProducts = function (page) {
+
+        $scope.loading = true;
+
+        $scope.currentPage = page || 1;
+
+        var params = {
+            page: $scope.currentPage,
+            search: $scope.filters.search,
+            min_price: $scope.filters.min_price,
+            max_price: $scope.filters.max_price,
+            color_ids: $scope.filters.color_ids,
+            sort: $scope.filters.sort,
+            direction: $scope.filters.direction
+        };
+
+        $http.get('/products', {
+            params: params
+        })
+        .then(function (response) {
+
+            $scope.products = response.data.data;
+
+            $scope.totalPages =
+                response.data.last_page || 1;
+
+            $scope.currentPage =
+                response.data.current_page || 1;
+
+            $scope.totalProducts =
+                response.data.total || 0;
+
+            $scope.selectedProductIds = [];
+
+            $scope.selectAll = false;
+
+        })
+        .catch(function (error) {
+
+            console.error(
+                'Unable to load products',
+                error
+            );
+
+        })
+        .finally(function () {
+
+            $scope.loading = false;
+
+        });
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Search
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.searchProducts = function () {
+
+        $scope.loadProducts(1);
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Apply Filters
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.applyFilters = function () {
+
+        $scope.loadProducts(1);
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Clear Filters
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.clearFilters = function () {
+
+        $scope.filters = {
+            search: '',
+            min_price: '',
+            max_price: '',
+            color_ids: [],
+            sort: 'id',
+            direction: 'asc'
+        };
+
+        $('#filterColors')
+            .val(null)
+            .trigger('change');
+
+        $scope.loadProducts(1);
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sorting
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.changeSorting = function () {
+
+        $scope.loadProducts(1);
+    };
 
     /*
     |--------------------------------------------------------------------------
@@ -429,275 +254,58 @@ app.controller('ProductController', function (
     |--------------------------------------------------------------------------
     */
 
-    $scope.pageChanged =
-        function (newPage) {
+    $scope.pageNumbers = function () {
 
-            loadProducts(
-                newPage
-            );
+        var pages = [];
 
-        };
-
-$scope.getPages = function () {
-
-    var pages = [];
-
-    var startPage =
-        (($scope.currentPage - 1) * 3) + 1;
-
-    var endPage =
-        startPage + 2;
-
-    for (
-        var i = startPage;
-        i <= endPage;
-        i++
-    ) {
-
-        if (i <= $scope.lastPage) {
+        for (
+            var i = 1;
+            i <= $scope.totalPages;
+            i++
+        ) {
             pages.push(i);
         }
 
-    }
+        return pages;
+    };
 
-    return pages;
-};
+    $scope.goToPage = function (page) {
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Search Products
-    |--------------------------------------------------------------------------
-    */
-
-    $scope.searchProducts =
-        function () {
-
-            loadProducts(1);
-
-        };
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Reset Filters
-    |--------------------------------------------------------------------------
-    */
-
-    $scope.resetFilters =
-        function () {
-
-            $scope.filters = {
-
-                search: '',
-
-                min_price: '',
-
-                max_price: '',
-
-                color_ids: []
-
-            };
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Clear Select2 Without Triggering Filter
-            |--------------------------------------------------------------------------
-            */
-
-            $('#filterColorSelect')
-                .val(null)
-                .trigger('change.select2');
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Reload Products
-            |--------------------------------------------------------------------------
-            */
-
-            loadProducts(1);
-
-        };
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Create Product Modal
-    |--------------------------------------------------------------------------
-    */
-
-    $('#create-product').on(
-        'shown.bs.modal',
-        function () {
-
-            loadColors(
-                function () {
-
-                    $timeout(
-                        function () {
-
-                            var select =
-                                $('#colorSelectCreate');
-
-
-                            /*
-                            |--------------------------------------------------------------------------
-                            | Destroy Existing Select2
-                            |--------------------------------------------------------------------------
-                            */
-
-                            if (
-                                select.hasClass(
-                                    'select2-hidden-accessible'
-                                )
-                            ) {
-
-                                select.select2(
-                                    'destroy'
-                                );
-
-                            }
-
-
-                            /*
-                            |--------------------------------------------------------------------------
-                            | Initialize Create Select2
-                            |--------------------------------------------------------------------------
-                            */
-
-                            select.select2({
-
-                                dropdownParent:
-                                    $('#create-product'),
-
-                                width:
-                                    '100%',
-
-                                placeholder:
-                                    'Select colors',
-
-                                allowClear:
-                                    true,
-
-                                closeOnSelect:
-                                    false,
-
-                                data:
-                                    $scope.colors.map(
-                                        function (color) {
-
-                                            return {
-
-                                                id:
-                                                    String(
-                                                        color.id
-                                                    ),
-
-                                                text:
-                                                    color.name
-
-                                            };
-
-                                        }
-                                    )
-
-                            });
-
-                        },
-                        100
-                    );
-
-                }
-            );
-
+        if (
+            page >= 1 &&
+            page <= $scope.totalPages
+        ) {
+            $scope.loadProducts(page);
         }
-    );
-
+    };
 
     /*
     |--------------------------------------------------------------------------
-    | Save Product
+    | Open Add Modal
     |--------------------------------------------------------------------------
     */
 
-    $scope.saveAdd =
-        function () {
+    $scope.openAddModal = function () {
 
-            $scope.form.color_ids =
-                $('#colorSelectCreate').val() || [];
+        $scope.editing = false;
 
-
-            $http.post(
-                '/products',
-                $scope.form
-            ).then(function () {
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Reload Products
-                |--------------------------------------------------------------------------
-                */
-
-                loadProducts(1);
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Reload Analytics
-                |--------------------------------------------------------------------------
-                */
-
-                $scope.loadAnalytics();
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Close Modal
-                |--------------------------------------------------------------------------
-                */
-
-                $('#create-product')
-                    .modal('hide');
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Reset Form
-                |--------------------------------------------------------------------------
-                */
-
-                $scope.form = {};
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Clear Select2
-                |--------------------------------------------------------------------------
-                */
-
-                $('#colorSelectCreate')
-                    .val(null)
-                    .trigger('change');
-
-
-            }, function (error) {
-
-                console.error(
-                    'Product creation failed:',
-                    error
-                );
-
-                alert(
-                    'Please check the product data.'
-                );
-
-            });
-
+        $scope.form = {
+            id: null,
+            title: '',
+            price: '',
+            color_ids: []
         };
 
+        $('#productModal').modal('show');
+
+        $timeout(function () {
+
+            $('#productColors')
+                .val([])
+                .trigger('change');
+
+        }, 200);
+    };
 
     /*
     |--------------------------------------------------------------------------
@@ -705,216 +313,145 @@ $scope.getPages = function () {
     |--------------------------------------------------------------------------
     */
 
-    $scope.edit =
-        function (id) {
+    $scope.editProduct = function (id) {
 
-            $http.get(
-                '/products/' +
-                id +
-                '/edit'
-            ).then(function (res) {
+        $http.get('/products/' + id + '/edit')
+            .then(function (response) {
 
-                $scope.form =
-                    res.data;
+                var product = response.data;
 
+                $scope.editing = true;
 
-                /*
-                |--------------------------------------------------------------------------
-                | Open Edit Modal
-                |--------------------------------------------------------------------------
-                */
+                $scope.form = {
+                    id: product.id,
+                    title: product.title,
+                    price: product.price,
+                    color_ids: product.colors.map(function (color) {
+                        return color.id;
+                    })
+                };
 
-                $('#edit-product')
-                    .modal('show');
+                $('#productModal').modal('show');
 
+                $timeout(function () {
 
-                /*
-                |--------------------------------------------------------------------------
-                | Load Colors
-                |--------------------------------------------------------------------------
-                */
+                    $('#productColors')
+                        .val($scope.form.color_ids)
+                        .trigger('change');
 
-                loadColors(
-                    function () {
+                }, 200);
 
-                        $timeout(
-                            function () {
-
-                                var select =
-                                    $('#colorSelectEdit');
-
-
-                                /*
-                                |--------------------------------------------------------------------------
-                                | Destroy Existing Select2
-                                |--------------------------------------------------------------------------
-                                */
-
-                                if (
-                                    select.hasClass(
-                                        'select2-hidden-accessible'
-                                    )
-                                ) {
-
-                                    select.select2(
-                                        'destroy'
-                                    );
-
-                                }
-
-
-                                /*
-                                |--------------------------------------------------------------------------
-                                | Initialize Edit Select2
-                                |--------------------------------------------------------------------------
-                                */
-
-                                select.select2({
-
-                                    dropdownParent:
-                                        $('#edit-product'),
-
-                                    width:
-                                        '100%',
-
-                                    placeholder:
-                                        'Select colors',
-
-                                    allowClear:
-                                        true,
-
-                                    closeOnSelect:
-                                        false,
-
-                                    data:
-                                        $scope.colors.map(
-                                            function (color) {
-
-                                                return {
-
-                                                    id:
-                                                        String(
-                                                            color.id
-                                                        ),
-
-                                                    text:
-                                                        color.name
-
-                                                };
-
-                                            }
-                                        )
-
-                                });
-
-
-                                /*
-                                |--------------------------------------------------------------------------
-                                | Existing Selected Colors
-                                |--------------------------------------------------------------------------
-                                */
-
-                                var selectedColors =
-                                    res.data.colors.map(
-                                        function (color) {
-
-                                            return String(
-                                                color.id
-                                            );
-
-                                        }
-                                    );
-
-
-                                /*
-                                |--------------------------------------------------------------------------
-                                | Set Selected Colors
-                                |--------------------------------------------------------------------------
-                                */
-
-                                select
-                                    .val(
-                                        selectedColors
-                                    )
-                                    .trigger(
-                                        'change'
-                                    );
-
-                            },
-                            100
-                        );
-
-                    }
-                );
-
-            });
-
-        };
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Update Product
-    |--------------------------------------------------------------------------
-    */
-
-    $scope.saveEdit =
-        function () {
-
-            $scope.form.color_ids =
-                $('#colorSelectEdit').val() || [];
-
-
-            $http.put(
-                '/products/' +
-                $scope.form.id,
-                $scope.form
-            ).then(function () {
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Reload Products
-                |--------------------------------------------------------------------------
-                */
-
-                loadProducts(1);
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Reload Analytics
-                |--------------------------------------------------------------------------
-                */
-
-                $scope.loadAnalytics();
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Close Modal
-                |--------------------------------------------------------------------------
-                */
-
-                $('#edit-product')
-                    .modal('hide');
-
-
-            }, function (error) {
+            })
+            .catch(function (error) {
 
                 console.error(
-                    'Product update failed:',
+                    'Unable to load product',
                     error
                 );
 
+            });
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Save Product
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.saveProduct = function () {
+
+        if (!$scope.form.title) {
+
+            alert('Product title is required.');
+
+            return;
+        }
+
+        if (
+            $scope.form.price === '' ||
+            $scope.form.price === null
+        ) {
+
+            alert('Product price is required.');
+
+            return;
+        }
+
+        $scope.saving = true;
+
+        var data = {
+            title: $scope.form.title,
+            price: $scope.form.price,
+            color_ids: $scope.form.color_ids || []
+        };
+
+        if ($scope.editing) {
+
+            $http.put(
+                '/products/' + $scope.form.id,
+                data
+            )
+            .then(function () {
+
                 alert(
-                    'Please check the product data.'
+                    'Product updated successfully.'
                 );
+
+                $('#productModal').modal('hide');
+
+                $scope.loadProducts(
+                    $scope.currentPage
+                );
+
+            })
+            .catch(function (error) {
+
+                console.error(error);
+
+                alert(
+                    'Unable to update product.'
+                );
+
+            })
+            .finally(function () {
+
+                $scope.saving = false;
 
             });
 
-        };
+        } else {
 
+            $http.post(
+                '/products',
+                data
+            )
+            .then(function () {
+
+                alert(
+                    'Product created successfully.'
+                );
+
+                $('#productModal').modal('hide');
+
+                $scope.loadProducts(1);
+
+            })
+            .catch(function (error) {
+
+                console.error(error);
+
+                alert(
+                    'Unable to create product.'
+                );
+
+            })
+            .finally(function () {
+
+                $scope.saving = false;
+
+            });
+        }
+    };
 
     /*
     |--------------------------------------------------------------------------
@@ -922,102 +459,228 @@ $scope.getPages = function () {
     |--------------------------------------------------------------------------
     */
 
-    $scope.remove =
-        function (item, index) {
+    $scope.deleteProduct = function (id) {
 
-            if (
-                !confirm(
-                    'Are you sure you want to delete this product?'
-                )
-            ) {
+        if (!confirm(
+            'Are you sure you want to delete this product?'
+        )) {
+            return;
+        }
 
-                return;
+        $http.delete(
+            '/products/' + id
+        )
+        .then(function () {
 
+            alert(
+                'Product deleted successfully.'
+            );
+
+            $scope.loadProducts(
+                $scope.currentPage
+            );
+
+        })
+        .catch(function (error) {
+
+            console.error(error);
+
+            alert(
+                'Unable to delete product.'
+            );
+
+        });
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Duplicate Product
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.duplicateProduct = function (id) {
+
+        if (!confirm(
+            'Duplicate this product?'
+        )) {
+            return;
+        }
+
+        $http.post(
+            '/products/' + id + '/duplicate'
+        )
+        .then(function (response) {
+
+            alert(
+                response.data.message
+            );
+
+            $scope.loadProducts(
+                $scope.currentPage
+            );
+
+        })
+        .catch(function (error) {
+
+            console.error(error);
+
+            alert(
+                'Unable to duplicate product.'
+            );
+
+        });
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Select Product
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.toggleProductSelection = function (id) {
+
+        var index =
+            $scope.selectedProductIds.indexOf(id);
+
+        if (index === -1) {
+
+            $scope.selectedProductIds.push(id);
+
+        } else {
+
+            $scope.selectedProductIds.splice(
+                index,
+                1
+            );
+        }
+
+        $scope.updateSelectAllState();
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Select All
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.toggleSelectAll = function () {
+
+        if ($scope.selectAll) {
+
+            $scope.selectedProductIds =
+                $scope.products.map(function (product) {
+                    return product.id;
+                });
+
+        } else {
+
+            $scope.selectedProductIds = [];
+        }
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Update Select All
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.updateSelectAllState = function () {
+
+        if (!$scope.products.length) {
+
+            $scope.selectAll = false;
+
+            return;
+        }
+
+        $scope.selectAll =
+            $scope.selectedProductIds.length ===
+            $scope.products.length;
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bulk Delete
+    |--------------------------------------------------------------------------
+    */
+
+    $scope.bulkDelete = function () {
+
+        if (
+            !$scope.selectedProductIds.length
+        ) {
+
+            alert(
+                'Please select at least one product.'
+            );
+
+            return;
+        }
+
+        if (!confirm(
+            'Delete ' +
+            $scope.selectedProductIds.length +
+            ' selected product(s)?'
+        )) {
+            return;
+        }
+
+        $http.post(
+            '/products-bulk-delete',
+            {
+                ids: $scope.selectedProductIds
             }
+        )
+        .then(function (response) {
 
+            alert(
+                response.data.message
+            );
 
-            $http.delete(
-                '/products/' +
-                item.id
-            ).then(function () {
+            $scope.loadProducts(
+                $scope.currentPage
+            );
 
+        })
+        .catch(function (error) {
 
-                /*
-                |--------------------------------------------------------------------------
-                | Remove From Current Page
-                |--------------------------------------------------------------------------
-                */
+            console.error(error);
 
-                $scope.data.splice(
-                    index,
-                    1
-                );
+            alert(
+                'Unable to delete selected products.'
+            );
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | Update Total
-                |--------------------------------------------------------------------------
-                */
-
-                $scope.totalItems--;
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Reload Analytics
-                |--------------------------------------------------------------------------
-                */
-
-                $scope.loadAnalytics();
-
-
-            }, function (error) {
-
-                console.error(
-                    'Product deletion failed:',
-                    error
-                );
-
-            });
-
-        };
-
+        });
+    };
 
     /*
     |--------------------------------------------------------------------------
-    | Analytics
+    | CSV Export
     |--------------------------------------------------------------------------
     */
 
-    $scope.loadAnalytics =
-        function () {
+    $scope.exportProducts = function () {
 
-            $http.get(
-                '/products-analytics'
-            ).then(function (res) {
+        var params = $.param({
+            search: $scope.filters.search,
+            min_price: $scope.filters.min_price,
+            max_price: $scope.filters.max_price,
+            color_ids: $scope.filters.color_ids,
+            sort: $scope.filters.sort,
+            direction: $scope.filters.direction
+        });
 
-                $scope.analytics =
-                    res.data;
-
-            }, function (error) {
-
-                console.error(
-                    'Analytics loading failed:',
-                    error
-                );
-
-            });
-
-        };
-
+        window.location.href =
+            '/products-export?' + params;
+    };
 
     /*
     |--------------------------------------------------------------------------
-    | Initial Analytics
+    | Initial Load
     |--------------------------------------------------------------------------
     */
 
-    $scope.loadAnalytics();
+    $scope.loadColors();
 
+    $scope.loadProducts(1);
 });
