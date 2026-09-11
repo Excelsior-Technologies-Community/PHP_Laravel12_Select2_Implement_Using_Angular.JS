@@ -1,95 +1,131 @@
-<div class="text-center">
+<div class="jumbotron text-center">
+
 
     <h1>
         Laravel + AngularJS + Select2
     </h1>
 
-    <p class="lead">
-        Many-to-Many Product & Color Management
+
+    <p>
+        Product and Color Management System
     </p>
+
+
+    <hr>
+
+
+    <p>
+        Manage products, colors, filters and exports
+        from one dashboard.
+    </p>
+
+
+    <br>
+
+
+    <!-- ===================================================== -->
+    <!-- MANAGE PRODUCTS -->
+    <!-- ===================================================== -->
+
+    <button
+        type="button"
+        class="btn btn-primary btn-lg"
+        ng-click="navigate('/products')">
+
+        📦 Manage Products
+
+    </button>
+
+
+    <!-- ===================================================== -->
+    <!-- MANAGE COLORS -->
+    <!-- ===================================================== -->
+
+    <button
+        type="button"
+        class="btn btn-success btn-lg"
+        ng-click="navigate('/colors')">
+
+        🎨 Manage Colors
+
+    </button>
+
 
 </div>
 
+
+
+<!-- ========================================================= -->
+<!-- FEATURES -->
+<!-- ========================================================= -->
 
 <div class="row">
 
+
+    <!-- ===================================================== -->
+    <!-- SEARCH -->
+    <!-- ===================================================== -->
+
     <div class="col-md-4">
 
-        <div class="panel panel-primary">
+        <div class="feature-card">
 
-            <div class="panel-heading">
-                Select2 Multiple Selection
-            </div>
+            <h3>
+                🔎 Smart Search
+            </h3>
 
-            <div class="panel-body">
-
-                Select multiple colors for every product
-                using searchable Select2 dropdowns.
-
-            </div>
+            <p>
+                Search products by title and combine
+                search with price and color filters.
+            </p>
 
         </div>
 
     </div>
 
 
+    <!-- ===================================================== -->
+    <!-- SELECT2 -->
+    <!-- ===================================================== -->
+
     <div class="col-md-4">
 
-        <div class="panel panel-success">
+        <div class="feature-card">
 
-            <div class="panel-heading">
-                Advanced Filtering
-            </div>
+            <h3>
+                🎨 Select2 Colors
+            </h3>
 
-            <div class="panel-body">
-
-                Search products and filter them using
-                multiple colors and price ranges.
-
-            </div>
+            <p>
+                Select multiple colors using the
+                Select2 interface.
+            </p>
 
         </div>
 
     </div>
 
 
+    <!-- ===================================================== -->
+    <!-- CSV EXPORT -->
+    <!-- ===================================================== -->
+
     <div class="col-md-4">
 
-        <div class="panel panel-info">
+        <div class="feature-card">
 
-            <div class="panel-heading">
-                Analytics
-            </div>
+            <h3>
+                📥 CSV Export
+            </h3>
 
-            <div class="panel-body">
-
-                View product, color and
-                Product–Color relationship statistics.
-
-            </div>
+            <p>
+                Export the products currently matching
+                your filters and sorting.
+            </p>
 
         </div>
 
     </div>
 
-</div>
-
-
-<div class="text-center"
-     style="margin-top:30px">
-
-    <a href="#/products"
-       class="btn btn-primary btn-lg">
-
-        Open Product Management
-
-    </a>
-
-    <a href="#/colors"
-       class="btn btn-default btn-lg">
-
-        Manage Colors
-
-    </a>
 
 </div>
