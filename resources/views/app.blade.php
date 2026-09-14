@@ -114,6 +114,9 @@
         src="{{ asset('app/controllers/ColorController.js') }}">
     </script>
 
+    <script src="{{ asset('app/controllers/DashboardController.js') }}"></script>
+    <script src="{{ asset('app/controllers/CatalogController.js') }}"></script>
+
 
     <!-- ===================================================== -->
     <!-- CUSTOM CSS -->
@@ -252,6 +255,45 @@
             border-radius: 6px;
         }
 
+        .filter-row, .form-row { margin-top: 15px; }
+
+        .column-tools { padding: 12px 0; color: #555; }
+
+        .bulk-control { display: inline-block; width: 140px; margin-left: 8px; height: 30px; }
+
+        .product-thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 4px; }
+
+        .details-image { max-width: 100%; max-height: 220px; display: block; margin: 0 auto 15px; }
+
+        .actions { min-width: 190px; }
+
+        .spinning { animation: spin 1s linear infinite; }
+
+        .dashboard-header { margin: 20px 0; }
+
+        .metric-card, .dashboard-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+
+        .metric-card small { color: #6b7280; display: block; letter-spacing: 1px; }
+
+        .metric-card strong, .dashboard-number { display: block; font-size: 28px; margin-top: 8px; color: #1f2937; }
+
+        .metric-card.warning strong { color: #c2410c; }
+
+        .dashboard-card h4 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+
+        .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f1f1; }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        @media (max-width: 767px) {
+            .navbar-nav { margin: 0; }
+            .navbar-nav > li { display: inline-block; }
+            .panel-heading .pull-right { float: none !important; margin-top: 15px; }
+            .bulk-control { margin: 8px 0 0; width: 100%; }
+            .filter-buttons { margin-top: 10px; }
+            .product-table { min-width: 1000px; }
+        }
+
     </style>
 
 </head>
@@ -273,9 +315,7 @@
 
         <div class="navbar-header">
 
-            <a
-                class="navbar-brand"
-                ng-click="goHome()">
+            <a class="navbar-brand" href="#!/">
 
                 Laravel + AngularJS + Select2
 
@@ -293,8 +333,7 @@
 
             <li>
 
-                <a
-                    ng-click="navigate('/')">
+                <a href="#!/">
 
                     🏠 Home
 
@@ -307,8 +346,7 @@
 
             <li>
 
-                <a
-                    ng-click="navigate('/products')">
+                <a href="#!/products">
 
                     📦 Products
 
@@ -321,14 +359,16 @@
 
             <li>
 
-                <a
-                    ng-click="navigate('/colors')">
+                <a href="#!/colors">
 
                     🎨 Colors
 
                 </a>
 
             </li>
+
+            <li><a href="#!/categories">Categories</a></li>
+            <li><a href="#!/brands">Brands</a></li>
 
 
         </ul>

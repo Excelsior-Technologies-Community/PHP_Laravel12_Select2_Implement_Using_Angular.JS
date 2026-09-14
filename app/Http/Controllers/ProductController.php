@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Color;
+use App\Models\Category;
+use App\Models\Brand;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -21,7 +25,7 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::with('colors');
+        $query = Product::with(['colors', 'category', 'brand']);
 
         /*
         |--------------------------------------------------------------------------
@@ -32,7 +36,10 @@ class ProductController extends Controller
         if ($request->filled('search')) {
             $search = trim($request->search);
 
-            $query->where('title', 'like', '%' . $search . '%');
+            $query->where(function ($searchQuery) use ($search) {
+                $searchQuery->where('title', 'like', '%' . $search . '%')
+                    ->orWhere('sku', 'like', '%' . $search . '%');
+            });
         }
 
         /*
@@ -78,6 +85,26 @@ class ProductController extends Controller
                     $colorQuery->whereIn('colors.id', $colorIds);
                 });
             }
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('brand_id')) {
+            $query->where('brand_id', $request->brand_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
         }
 
         /*
@@ -127,32 +154,22 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-
-            'price' => [
-                'required',
-                'numeric',
-                'min:0',
-            ],
-
-            'color_ids' => [
-                'nullable',
-                'array',
-            ],
-
-            'color_ids.*' => [
-                'exists:colors,id',
-            ],
-        ]);
+        $validated = $this->validateProduct($request);
 
         $product = Product::create([
             'title' => $validated['title'],
             'price' => $validated['price'],
+            'description' => $validated['description'] ?? null,
+            'sku' => $validated['sku'] ?? null,
+            'slug' => $validated['slug'] ?? Str::slug($validated['title']) . '-' . uniqid(),
+            'category_id' => $validated['category_id'] ?? null,
+            'brand_id' => $validated['brand_id'] ?? null,
+            'stock_quantity' => $validated['stock_quantity'] ?? 0,
+            'status' => $validated['status'] ?? 'active',
+            'discount' => $validated['discount'] ?? 0,
+            'image' => $request->hasFile('image')
+                ? $request->file('image')->store('products', 'public')
+                : null,
         ]);
 
         $product->colors()->sync(
@@ -170,7 +187,7 @@ class ProductController extends Controller
      */
     public function edit($id)
     {
-        $product = Product::with('colors')
+        $product = Product::with(['colors', 'category', 'brand'])
             ->findOrFail($id);
 
         return response()->json($product);
@@ -181,35 +198,28 @@ class ProductController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
-            'title' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-
-            'price' => [
-                'required',
-                'numeric',
-                'min:0',
-            ],
-
-            'color_ids' => [
-                'nullable',
-                'array',
-            ],
-
-            'color_ids.*' => [
-                'exists:colors,id',
-            ],
-        ]);
+        $validated = $this->validateProduct($request, $id);
 
         $product = Product::findOrFail($id);
 
         $product->update([
             'title' => $validated['title'],
             'price' => $validated['price'],
+            'description' => $validated['description'] ?? null,
+            'sku' => $validated['sku'] ?? null,
+            'slug' => $validated['slug'] ?? $product->slug,
+            'category_id' => $validated['category_id'] ?? null,
+            'brand_id' => $validated['brand_id'] ?? null,
+            'stock_quantity' => $validated['stock_quantity'] ?? 0,
+            'status' => $validated['status'] ?? 'active',
+            'discount' => $validated['discount'] ?? 0,
         ]);
+
+        if ($request->hasFile('image')) {
+            $product->update([
+                'image' => $request->file('image')->store('products', 'public'),
+            ]);
+        }
 
         $product->colors()->sync(
             $validated['color_ids'] ?? []
@@ -242,12 +252,21 @@ class ProductController extends Controller
      */
     public function duplicate($id)
     {
-        $product = Product::with('colors')
+        $product = Product::with(['colors', 'category', 'brand'])
             ->findOrFail($id);
 
         $duplicate = Product::create([
             'title' => $product->title . ' Copy',
             'price' => $product->price,
+            'description' => $product->description,
+            'sku' => $product->sku ? $product->sku . '-COPY' : null,
+            'slug' => Str::slug($product->title . '-copy-' . uniqid()),
+            'category_id' => $product->category_id,
+            'brand_id' => $product->brand_id,
+            'stock_quantity' => $product->stock_quantity,
+            'status' => $product->status,
+            'discount' => $product->discount,
+            'image' => $product->image,
         ]);
 
         $duplicate->colors()->sync(
@@ -301,7 +320,7 @@ class ProductController extends Controller
      */
     public function export(Request $request)
     {
-        $query = Product::with('colors');
+        $query = Product::with(['colors', 'category', 'brand']);
 
         /*
         |--------------------------------------------------------------------------
@@ -310,11 +329,11 @@ class ProductController extends Controller
         */
 
         if ($request->filled('search')) {
-            $query->where(
-                'title',
-                'like',
-                '%' . trim($request->search) . '%'
-            );
+            $search = trim($request->search);
+            $query->where(function ($searchQuery) use ($search) {
+                $searchQuery->where('title', 'like', '%' . $search . '%')
+                    ->orWhere('sku', 'like', '%' . $search . '%');
+            });
         }
 
         /*
@@ -367,6 +386,12 @@ class ProductController extends Controller
             }
         }
 
+        foreach (['category_id', 'brand_id', 'status'] as $filter) {
+            if ($request->filled($filter)) {
+                $query->where($filter, $request->get($filter));
+            }
+        }
+
         /*
         |--------------------------------------------------------------------------
         | Sorting
@@ -413,7 +438,14 @@ class ProductController extends Controller
             fputcsv($handle, [
                 'ID',
                 'Title',
+                'SKU',
                 'Price',
+                'Final Price',
+                'Discount',
+                'Stock',
+                'Status',
+                'Category',
+                'Brand',
                 'Colors',
                 'Created At',
             ]);
@@ -427,7 +459,14 @@ class ProductController extends Controller
                 fputcsv($handle, [
                     $product->id,
                     $product->title,
+                    $product->sku,
                     $product->price,
+                    $product->final_price,
+                    $product->discount,
+                    $product->stock_quantity,
+                    $product->status,
+                    optional($product->category)->name,
+                    optional($product->brand)->name,
                     $colors,
                     $product->created_at,
                 ]);
@@ -480,6 +519,17 @@ class ProductController extends Controller
                     ];
                 });
 
+        $categoryStatistics = Category::withCount('products')
+            ->orderByDesc('products_count')
+            ->get(['id', 'name', 'products_count']);
+
+        $stockValue = Product::sum(DB::raw('price * stock_quantity'));
+        $lowStockProducts = Product::where('stock_quantity', '<', 5)->count();
+        $monthlyProducts = Product::get()
+            ->groupBy(fn ($product) => $product->created_at->format('Y-m'))
+            ->map(fn ($products, $month) => ['month' => $month, 'total' => $products->count()])
+            ->values();
+
         return response()->json([
 
             'total_products' =>
@@ -519,6 +569,103 @@ class ProductController extends Controller
 
             'color_statistics' =>
                 $colorStatistics,
+
+            'total_categories' => Category::count(),
+            'total_brands' => Brand::count(),
+            'stock_value' => $stockValue,
+            'low_stock_products' => $lowStockProducts,
+            'category_statistics' => $categoryStatistics,
+            'monthly_products' => $monthlyProducts,
         ]);
+    }
+
+    private function validateProduct(Request $request, $id = null)
+    {
+        return $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'sku' => ['nullable', 'string', 'max:100', 'unique:products,sku,' . ($id ?: 'NULL') . ',id'],
+            'slug' => ['nullable', 'string', 'max:255', 'unique:products,slug,' . ($id ?: 'NULL') . ',id'],
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'brand_id' => ['nullable', 'exists:brands,id'],
+            'stock_quantity' => ['nullable', 'integer', 'min:0'],
+            'status' => ['nullable', 'in:active,inactive'],
+            'discount' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'color_ids' => ['nullable', 'array'],
+            'color_ids.*' => ['exists:colors,id'],
+            'image' => ['nullable', 'image', 'max:2048'],
+        ]);
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:products,id'],
+            'status' => ['nullable', 'in:active,inactive'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $changes = array_filter([
+            'status' => $validated['status'] ?? null,
+            'price' => $validated['price'] ?? null,
+        ], fn ($value) => $value !== null);
+
+        if (!$changes) {
+            return response()->json(['message' => 'Choose a status or price update.'], 422);
+        }
+
+        Product::whereIn('id', $validated['ids'])->update($changes);
+
+        return response()->json(['success' => true, 'message' => count($validated['ids']) . ' product(s) updated.']);
+    }
+
+    public function trash()
+    {
+        return response()->json(Product::onlyTrashed()->with(['colors', 'category', 'brand'])->latest('deleted_at')->get());
+    }
+
+    public function restore($id)
+    {
+        Product::onlyTrashed()->findOrFail($id)->restore();
+
+        return response()->json(['success' => true, 'message' => 'Product restored successfully.']);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => ['required', 'file', 'mimes:csv,txt', 'max:5120']]);
+        $handle = fopen($request->file('file')->getRealPath(), 'r');
+        $headers = array_map('strtolower', array_map('trim', fgetcsv($handle)));
+        $count = 0;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $data = array_combine($headers, $row);
+            if (empty($data['title']) || !isset($data['price'])) {
+                continue;
+            }
+
+            Product::updateOrCreate(
+                ['sku' => $data['sku'] ?? null, 'title' => $data['title']],
+                [
+                    'price' => $data['price'],
+                    'description' => $data['description'] ?? null,
+                    'slug' => Str::slug($data['slug'] ?? $data['title']) . '-' . uniqid(),
+                    'stock_quantity' => $data['stock_quantity'] ?? 0,
+                    'status' => in_array($data['status'] ?? 'active', ['active', 'inactive']) ? ($data['status'] ?? 'active') : 'active',
+                    'discount' => $data['discount'] ?? 0,
+                ]
+            );
+            $count++;
+        }
+        fclose($handle);
+
+        return response()->json(['success' => true, 'message' => $count . ' product(s) imported.']);
+    }
+
+    public function show($id)
+    {
+        return response()->json(Product::with(['colors', 'category', 'brand'])->findOrFail($id));
     }
 }

@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ColorController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\BrandController;
 
 
 /*
@@ -55,6 +57,11 @@ Route::post(
     [ProductController::class, 'duplicate']
 );
 
+Route::post('/products-bulk-update', [ProductController::class, 'bulkUpdate']);
+Route::get('/products-trash', [ProductController::class, 'trash']);
+Route::post('/products/{id}/restore', [ProductController::class, 'restore']);
+Route::post('/products-import', [ProductController::class, 'import']);
+
 
 /*
 |--------------------------------------------------------------------------
@@ -78,3 +85,6 @@ Route::resource(
     'colors',
     ColorController::class
 );
+
+Route::resource('categories', CategoryController::class)->only(['index', 'store', 'destroy']);
+Route::resource('brands', BrandController::class)->only(['index', 'store', 'destroy']);
