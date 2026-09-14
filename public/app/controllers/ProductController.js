@@ -1,4 +1,4 @@
-mainApp.controller('ProductController', function ($scope, $http, $timeout) {
+mainApp.controller('ProductController', function ($scope, $http, $timeout, $window) {
 
     /*
     |--------------------------------------------------------------------------
@@ -9,6 +9,29 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
     $scope.products = [];
 
     $scope.colors = [];
+
+    $scope.categories = [];
+
+    $scope.brands = [];
+
+    $scope.toast = '';
+
+    $scope.visibleColumns = {
+        image: true,
+        sku: true,
+        category: true,
+        stock: true,
+        status: true,
+        price: true,
+        colors: true,
+        created: true
+    };
+
+    $scope.bulk = { status: '', price: '' };
+
+    $scope.trash = [];
+
+    $scope.showTrash = false;
 
     $scope.selectedProductIds = [];
 
@@ -37,6 +60,11 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
         min_price: '',
         max_price: '',
         color_ids: [],
+        category_id: '',
+        brand_id: '',
+        status: '',
+        date_from: '',
+        date_to: '',
         sort: 'id',
         direction: 'asc'
     };
@@ -50,8 +78,9 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
     $scope.form = {
         id: null,
         title: '',
-        price: '',
-        color_ids: []
+        description: '', price: '', sku: '', slug: '',
+        category_id: '', brand_id: '', stock_quantity: 0,
+        status: 'active', discount: 0, image: null, color_ids: []
     };
 
     /*
@@ -82,6 +111,23 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
             });
     };
 
+    $scope.loadLookups = function () {
+        $http.get('/categories').then(function (response) { $scope.categories = response.data; });
+        $http.get('/brands').then(function (response) { $scope.brands = response.data; });
+    };
+
+    $scope.notify = function (message) {
+        $scope.toast = message;
+        $timeout(function () { $scope.toast = ''; }, 3000);
+    };
+
+    $scope.imageUrl = function (image) {
+        if (!image) { return ''; }
+        return image.indexOf('http://') === 0 || image.indexOf('https://') === 0
+            ? image
+            : '/storage/' + image;
+    };
+
     /*
     |--------------------------------------------------------------------------
     | Select2
@@ -94,15 +140,27 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
 
             var element = $(this);
 
+            if (typeof element.select2 !== 'function') {
+                console.error('Select2 is not loaded.');
+                return;
+            }
+
             if (element.hasClass('select2-hidden-accessible')) {
                 element.select2('destroy');
             }
 
-            element.select2({
+            var select2Options = {
                 width: '100%',
                 placeholder: 'Select colors',
-                allowClear: true
-            });
+                allowClear: true,
+                closeOnSelect: false
+            };
+
+            if (element.attr('id') === 'productColors') {
+                select2Options.dropdownParent = $('#productModal');
+            }
+
+            element.select2(select2Options);
 
             element.off('change.angular');
 
@@ -151,6 +209,11 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
             min_price: $scope.filters.min_price,
             max_price: $scope.filters.max_price,
             color_ids: $scope.filters.color_ids,
+            category_id: $scope.filters.category_id,
+            brand_id: $scope.filters.brand_id,
+            status: $scope.filters.status,
+            date_from: $scope.filters.date_from,
+            date_to: $scope.filters.date_to,
             sort: $scope.filters.sort,
             direction: $scope.filters.direction
         };
@@ -226,6 +289,7 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
             min_price: '',
             max_price: '',
             color_ids: [],
+            category_id: '', brand_id: '', status: '', date_from: '', date_to: '',
             sort: 'id',
             direction: 'asc'
         };
@@ -292,13 +356,15 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
         $scope.form = {
             id: null,
             title: '',
-            price: '',
-            color_ids: []
+            description: '', price: '', sku: '', slug: '', category_id: '', brand_id: '',
+            stock_quantity: 0, status: 'active', discount: 0, image: null, color_ids: []
         };
 
         $('#productModal').modal('show');
 
         $timeout(function () {
+
+            $scope.initializeSelect2();
 
             $('#productColors')
                 .val([])
@@ -325,7 +391,12 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
                 $scope.form = {
                     id: product.id,
                     title: product.title,
+                    description: product.description,
                     price: product.price,
+                    sku: product.sku, slug: product.slug,
+                    category_id: product.category_id || '', brand_id: product.brand_id || '',
+                    stock_quantity: product.stock_quantity, status: product.status,
+                    discount: product.discount, image: null,
                     color_ids: product.colors.map(function (color) {
                         return color.id;
                     })
@@ -334,6 +405,8 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
                 $('#productModal').modal('show');
 
                 $timeout(function () {
+
+                    $scope.initializeSelect2();
 
                     $('#productColors')
                         .val($scope.form.color_ids)
@@ -379,17 +452,27 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
 
         $scope.saving = true;
 
-        var data = {
-            title: $scope.form.title,
-            price: $scope.form.price,
-            color_ids: $scope.form.color_ids || []
-        };
+        var data = new FormData();
+        data.append('title', $scope.form.title);
+        data.append('description', $scope.form.description || '');
+        data.append('price', $scope.form.price);
+        data.append('sku', $scope.form.sku || '');
+        data.append('slug', $scope.form.slug || '');
+        data.append('category_id', $scope.form.category_id || '');
+        data.append('brand_id', $scope.form.brand_id || '');
+        data.append('stock_quantity', $scope.form.stock_quantity || 0);
+        data.append('status', $scope.form.status || 'active');
+        data.append('discount', $scope.form.discount || 0);
+        ($scope.form.color_ids || []).forEach(function (id) { data.append('color_ids[]', id); });
+        if ($scope.form.image) { data.append('image', $scope.form.image); }
 
         if ($scope.editing) {
 
-            $http.put(
+            data.append('_method', 'PUT');
+            $http.post(
                 '/products/' + $scope.form.id,
-                data
+                data,
+                { transformRequest: angular.identity, headers: { 'Content-Type': undefined } }
             )
             .then(function () {
 
@@ -423,7 +506,8 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
 
             $http.post(
                 '/products',
-                data
+                data,
+                { transformRequest: angular.identity, headers: { 'Content-Type': undefined } }
             )
             .then(function () {
 
@@ -653,6 +737,48 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
         });
     };
 
+    $scope.bulkUpdate = function () {
+        if (!$scope.selectedProductIds.length) { alert('Select at least one product.'); return; }
+        if (!$scope.bulk.status && $scope.bulk.price === '') { alert('Choose status or enter price.'); return; }
+        $http.post('/products-bulk-update', {
+            ids: $scope.selectedProductIds, status: $scope.bulk.status || null,
+            price: $scope.bulk.price === '' ? null : $scope.bulk.price
+        }).then(function (response) { $scope.notify(response.data.message); $scope.loadProducts($scope.currentPage); });
+    };
+
+    $scope.importProducts = function (element) {
+        if (!element.files.length) { return; }
+        var data = new FormData(); data.append('file', element.files[0]);
+        $http.post('/products-import', data, { transformRequest: angular.identity, headers: { 'Content-Type': undefined } })
+            .then(function (response) { $scope.notify(response.data.message); $scope.loadProducts(1); });
+        element.value = '';
+    };
+
+    $scope.printReport = function () { $window.print(); };
+
+    $scope.toggleColumn = function (column) { $scope.visibleColumns[column] = !$scope.visibleColumns[column]; };
+
+    $scope.showDetails = function (id) {
+        $http.get('/products/' + id).then(function (response) {
+            $scope.details = response.data; $('#productDetailsModal').modal('show');
+        });
+    };
+
+    $scope.loadTrash = function () {
+        $http.get('/products-trash').then(function (response) {
+            $scope.trash = response.data;
+            $scope.showTrash = true;
+        });
+    };
+
+    $scope.restoreProduct = function (id) {
+        $http.post('/products/' + id + '/restore').then(function (response) {
+            $scope.notify(response.data.message);
+            $scope.loadTrash();
+            $scope.loadProducts($scope.currentPage);
+        });
+    };
+
     /*
     |--------------------------------------------------------------------------
     | CSV Export
@@ -681,6 +807,7 @@ mainApp.controller('ProductController', function ($scope, $http, $timeout) {
     */
 
     $scope.loadColors();
+    $scope.loadLookups();
 
     $scope.loadProducts(1);
 });

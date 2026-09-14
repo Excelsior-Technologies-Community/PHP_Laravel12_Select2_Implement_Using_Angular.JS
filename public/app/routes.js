@@ -46,7 +46,8 @@ mainApp.config([
 
             .when('/', {
 
-                templateUrl: '/templates/home.html'
+                templateUrl: '/templates/dashboard.html',
+                controller: 'DashboardController'
 
             })
 
@@ -75,6 +76,10 @@ mainApp.config([
                 controller: 'ColorController'
 
             })
+
+            .when('/categories', { templateUrl: '/templates/catalog.html', controller: 'CatalogController' })
+
+            .when('/brands', { templateUrl: '/templates/catalog.html', controller: 'CatalogController' })
 
 
             // -------------------------------------------------
